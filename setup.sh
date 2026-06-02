@@ -48,6 +48,8 @@ docker compose exec app php artisan migrate:fresh --seed --force
 echo "Building frontend assets..."
 docker compose exec node npm run build
 
+docker compose exec app php artisan reverb:start
+
 echo ""
 echo "======================================"
 echo " Setup Complete!"
