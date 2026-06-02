@@ -82,13 +82,8 @@
         </div>
       </div>
 
-      <!-- Comments placeholder -->
-      <div class="mt-6 bg-white rounded-xl shadow-sm border border-dashed border-gray-300 p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Comments</h2>
-        <p class="text-gray-400 text-sm italic">
-          💬 Comments feature is not implemented yet — this is one of the assessment tasks for you to build!
-        </p>
-      </div>
+      <!-- Comments -->
+      <CommentList :task-id="task.id" />
     </div>
   </div>
 </template>
@@ -97,6 +92,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../composables/useApi.js';
+import CommentList from '../components/CommentList.vue';
 
 const route = useRoute();
 const router = useRouter();
