@@ -1,5 +1,29 @@
 <template>
   <div>
+    <!-- Toast notification -->
+    <transition
+      enter-active-class="transition ease-out duration-300"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <div
+        v-if="notification"
+        class="fixed bottom-6 right-6 z-50 flex items-start gap-3 bg-white border border-gray-200 shadow-lg rounded-xl px-4 py-3 max-w-sm"
+      >
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold uppercase">
+          {{ notification.user.name.charAt(0) }}
+        </div>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-gray-900">New comment on "{{ task?.name }}"</p>
+          <p class="text-xs text-gray-500 mt-0.5">{{ notification.user.name }} left a comment</p>
+        </div>
+        <button @click="notification = null" class="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0 text-lg leading-none">&times;</button>
+      </div>
+    </transition>
+
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-16">
       <span class="text-gray-400 text-sm">Loading task…</span>
@@ -83,22 +107,30 @@
       </div>
 
       <!-- Comments -->
-      <CommentList :task-id="task.id" />
+      <CommentList :task-id="task.id" :new-comment="newComment" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../composables/useApi.js';
 import CommentList from '../components/CommentList.vue';
+import { initEcho } from '../echo.js';
+import { useAuth } from '../composables/useAuth.js';
 
 const route = useRoute();
 const router = useRouter();
+const { user } = useAuth();
 
 const task = ref(null);
 const loading = ref(true);
+const newComment = ref(null);
+const notification = ref(null);
+
+let echo = null;
+let notificationTimer = null;
 
 const fetchTask = async () => {
   loading.value = true;
@@ -156,5 +188,26 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-onMounted(fetchTask);
+onMounted(() => {
+  fetchTask();
+
+  echo = initEcho();
+  echo.private(`task.${route.params.id}`)
+    .listen('.comment.created', ({ comment }) => {
+      newComment.value = comment;
+
+      console.log(comment.user.id, user.value?.id)
+
+      if (comment.user.id !== user.value?.id) {
+        clearTimeout(notificationTimer);
+        notification.value = comment;
+        notificationTimer = setTimeout(() => { notification.value = null; }, 5000);
+      }
+    });
+});
+
+onUnmounted(() => {
+  echo?.leave(`task.${route.params.id}`);
+  clearTimeout(notificationTimer);
+});
 </script>

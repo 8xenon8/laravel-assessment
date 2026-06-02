@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
 Broadcast::channel('task.{taskId}', function ($user, $taskId) {
     return $user !== null;
 });

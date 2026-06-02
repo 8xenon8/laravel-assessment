@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import api from '../composables/useApi.js';
 
 const props = defineProps({
@@ -67,6 +67,16 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  newComment: {
+    type: Object,
+    default: null,
+  },
+});
+
+watch(() => props.newComment, (comment) => {
+  if (comment) {
+    comments.value.unshift(comment);
+  }
 });
 
 const comments = ref([]);
@@ -96,7 +106,6 @@ const submitComment = async () => {
   try {
     await api.post(`/tasks/${props.taskId}/comments`, { content: content.value });
     content.value = '';
-    await fetchComments();
   } catch (err) {
     const errors = err.response?.data?.errors;
     if (errors?.content) {

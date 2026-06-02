@@ -1,5 +1,10 @@
 import axios from 'axios';
+
+import { initEcho } from './echo.js';
+
 window.axios = axios;
+
+window.Echo = initEcho().e;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.withCredentials = true;
