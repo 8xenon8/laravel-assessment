@@ -4,18 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Services\StatusService;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    public function __construct(private StatusService $statusService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $statuses = $this->statusService->getStatuses()->implode(',');
+
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
-            'status' => 'nullable|in:todo,in_progress,done',
+            'status' => "nullable|in:$statuses",
         ]);
 
         $tasks = $request->user()->tasks();
@@ -38,10 +43,12 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
+        $statuses = $this->statusService->getStatuses()->implode(',');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:todo,in_progress,done',
+            'status' => "required|in:$statuses",
             'priority' => 'required|in:low,medium,high',
             'due_date' => 'nullable|date',
         ]);
@@ -72,10 +79,12 @@ class TaskController extends Controller
             abort(403);
         }
 
+        $statuses = $this->statusService->getStatuses()->implode(',');
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'sometimes|required|in:todo,in_progress,done',
+            'status' => "sometimes|required|in:$statuses",
             'priority' => 'sometimes|required|in:low,medium,high',
             'due_date' => 'nullable|date',
         ]);
