@@ -119,15 +119,16 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../composables/useApi.js';
 
+const route = useRoute();
 const router = useRouter();
 const tasks = ref([]);
 const statuses = ref([]);
 const loading = ref(true);
-const filterName = ref('');
-const filterStatus = ref('');
+const filterName = ref(route.query.name ?? '');
+const filterStatus = ref(route.query.status ?? '');
 
 const fetchTasks = async () => {
   loading.value = true;
@@ -144,7 +145,13 @@ const fetchTasks = async () => {
   }
 };
 
-const applyFilter = () => fetchTasks();
+const applyFilter = () => {
+  const query = {};
+  if (filterName.value) query.name = filterName.value;
+  if (filterStatus.value) query.status = filterStatus.value;
+  router.replace({ query });
+  fetchTasks();
+};
 
 const deleteTask = async (id) => {
   if (!confirm('Delete this task? This cannot be undone.')) return;
