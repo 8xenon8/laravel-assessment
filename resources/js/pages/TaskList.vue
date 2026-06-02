@@ -32,9 +32,7 @@
         @blur="applyFilter"
       >
         <option value="">All Statuses</option>
-        <option value="todo">To Do</option>
-        <option value="in_progress">In Progress</option>
-        <option value="done">Done</option>
+        <option v-for="s in statuses" :key="s" :value="s">{{ statusLabel(s) }}</option>
       </select>
     </div>
 
@@ -126,6 +124,7 @@ import api from '../composables/useApi.js';
 
 const router = useRouter();
 const tasks = ref([]);
+const statuses = ref([]);
 const loading = ref(true);
 const filterName = ref('');
 const filterStatus = ref('');
@@ -194,5 +193,11 @@ const isOverdue = (task) => {
   return new Date(task.due_date) < new Date();
 };
 
-onMounted(fetchTasks);
+onMounted(async () => {
+  const [, statusRes] = await Promise.allSettled([
+    fetchTasks(),
+    api.get('/statuses'),
+  ]);
+  if (statusRes.status === 'fulfilled') statuses.value = statusRes.value.data;
+});
 </script>
