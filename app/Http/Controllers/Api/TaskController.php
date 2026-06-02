@@ -13,8 +13,23 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'status' => 'nullable|in:todo,in_progress,done',
+        ]);
+
+        $tasks = $request->user()->tasks();
+
+        if (isset($validated['name'])) {
+            $tasks->where('name', 'like', '%' . $validated['name'] . '%');
+        }
+
+        if (isset($validated['status'])) {
+            $tasks->where('status', $validated['status']);
+        }
+
         return response()->json(
-            $request->user()->tasks()->latest()->get()
+            $tasks->latest()->get()
         );
     }
 

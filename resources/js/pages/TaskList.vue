@@ -16,6 +16,28 @@
       </div>
     </div>
 
+    <!-- Filters -->
+    <div class="mt-6 flex flex-col sm:flex-row gap-3">
+      <input
+        v-model="filterName"
+        type="text"
+        placeholder="Search by name…"
+        class="block w-full sm:w-64 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        @blur="applyFilter"
+        @keyup.enter="applyFilter"
+      />
+      <select
+        v-model="filterStatus"
+        class="block w-full sm:w-44 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        @blur="applyFilter"
+      >
+        <option value="">All Statuses</option>
+        <option value="todo">To Do</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+    </div>
+
     <!-- Loading state -->
     <div v-if="loading" class="mt-10 flex justify-center">
       <div class="text-gray-400 text-sm">Loading tasks…</div>
@@ -105,11 +127,16 @@ import api from '../composables/useApi.js';
 const router = useRouter();
 const tasks = ref([]);
 const loading = ref(true);
+const filterName = ref('');
+const filterStatus = ref('');
 
 const fetchTasks = async () => {
   loading.value = true;
   try {
-    const response = await api.get('/tasks');
+    const params = {};
+    if (filterName.value) params.name = filterName.value;
+    if (filterStatus.value) params.status = filterStatus.value;
+    const response = await api.get('/tasks', { params });
     tasks.value = response.data;
   } catch (err) {
     console.error('Failed to fetch tasks:', err);
@@ -117,6 +144,8 @@ const fetchTasks = async () => {
     loading.value = false;
   }
 };
+
+const applyFilter = () => fetchTasks();
 
 const deleteTask = async (id) => {
   if (!confirm('Delete this task? This cannot be undone.')) return;
